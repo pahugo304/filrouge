@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Mon espace — Ymmo{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 68px); }
+.sidebar { background: var(--noir); padding: 32px 0; }
+.sidebar-menu { list-style: none; }
+.sidebar-menu li a {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 28px; color: rgba(255,255,255,0.6);
+    text-decoration: none; font-size: 0.875rem;
+    transition: var(--transition); border-left: 3px solid transparent;
+}
+.sidebar-menu li a:hover, .sidebar-menu li a.active {
+    color: var(--white); background: rgba(255,255,255,0.06);
+    border-left-color: var(--gold);
+}
+.sidebar-menu li a i { width: 18px; text-align: center; color: var(--gold); }
+.sidebar-section { padding: 12px 28px 8px; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-top: 16px; }
+.dash-content { padding: 40px; background: var(--light-gray); }
+.dash-header { margin-bottom: 32px; }
+.stat-card { background: var(--white); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow); }
+.stat-card-value { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 600; color: var(--gold); }
+.stat-card-label { font-size: 0.8rem; color: var(--mid-gray); text-transform: uppercase; letter-spacing: 0.08em; }
+@media(max-width:768px){ .dashboard{grid-template-columns:1fr} .sidebar{display:none} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div style="padding:0 28px 28px;border-bottom:1px solid rgba(255,255,255,0.08)">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--white)">YM<span style="color:var(--gold)">M</span>O</div>
+            <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;margin-top:4px">Espace client</div>
+        </div>
+        <ul class="sidebar-menu" style="margin-top:16px">
+            <li><a href="{{ url_for('dashboard.index') }}" class="active"><i class="fas fa-th-large"></i> Tableau de bord</a></li>
+            <div class="sidebar-section">Mes biens</div>
+            <li><a href="#favoris"><i class="fas fa-heart"></i> Mes favoris <span style="margin-left:auto;background:rgba(201,168,76,0.2);color:var(--gold);padding:2px 8px;border-radius:50px;font-size:0.75rem">{{ favorites|length }}</span></a></li>
+            <div class="sidebar-section">Rendez-vous</div>
+            <li><a href="#rdv"><i class="fas fa-calendar"></i> Mes rendez-vous <span style="margin-left:auto;background:rgba(201,168,76,0.2);color:var(--gold);padding:2px 8px;border-radius:50px;font-size:0.75rem">{{ appointments|length }}</span></a></li>
+            <div class="sidebar-section">Compte</div>
+            <li><a href="{{ url_for('auth.profile') }}"><i class="fas fa-cog"></i> Mon profil</a></li>
+            <li><a href="{{ url_for('auth.logout') }}" style="color:rgba(192,57,43,0.7) !important"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+        </ul>
+    </aside>
+
+    <!-- Content -->
+    <div class="dash-content">
+        <div class="dash-header">
+            <h1 style="font-size:1.8rem">Bonjour, {{ current_user.first_name }} 👋</h1>
+            <p class="text-muted">Voici un résumé de votre activité sur Ymmo.</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-3" style="margin-bottom:40px">
+            <div class="stat-card">
+                <div class="stat-card-value">{{ favorites|length }}</div>
+                <div class="stat-card-label">Biens favoris</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">{{ appointments|length }}</div>
+                <div class="stat-card-label">Rendez-vous</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">{{ appointments|selectattr('status.value','eq','Confirmé')|list|length }}</div>
+                <div class="stat-card-label">RDV confirmés</div>
+            </div>
+        </div>
+
+        <!-- Favoris -->
+        <div id="favoris" class="card" style="padding:28px;margin-bottom:32px">
+            <h2 style="font-size:1.3rem;margin-bottom:24px">❤️ Mes biens favoris</h2>
+            {% if favorites %}
+            <div style="display:flex;flex-direction:column;gap:16px">
+                {% for fav in favorites %}
+                <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--light-gray);border-radius:var(--radius-lg)">
+                    <div style="width:80px;height:60px;border-radius:var(--radius);overflow:hidden;flex-shrink:0;background:#ddd">
+                        <img src="{{ url_for('static', filename='img/properties/' + fav.property.main_image) }}"
+                             style="width:100%;height:100%;object-fit:cover"
+                             onerror="this.style.display='none'" alt="">
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-weight:600;margin-bottom:2px">{{ fav.property.title }}</div>
+                        <div class="text-muted" style="font-size:0.82rem">📍 {{ fav.property.city }} — {{ fav.property.property_type.value }}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--gold-dark);font-weight:600">
+                            {{ "{:,.0f}".format(fav.property.price) }} €
+                        </div>
+                        <span class="badge {% if fav.property.status.value == 'Disponible' %}badge-success{% else %}badge-danger{% endif %}" style="font-size:0.72rem">{{ fav.property.status.value }}</span>
+                    </div>
+                    <a href="{{ url_for('properties.detail', id=fav.property.id) }}" class="btn btn-dark btn-sm">Voir →</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:40px;color:var(--mid-gray)">
+                <i class="fas fa-heart" style="font-size:2.5rem;color:var(--light-gray);margin-bottom:12px"></i>
+                <p>Vous n'avez aucun bien en favori.</p>
+                <a href="{{ url_for('main.search') }}" class="btn btn-gold btn-sm" style="margin-top:16px">Explorer les biens</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Rendez-vous -->
+        <div id="rdv" class="card" style="padding:28px">
+            <h2 style="font-size:1.3rem;margin-bottom:24px">📅 Mes rendez-vous</h2>
+            {% if appointments %}
+            <div style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bien</th>
+                            <th>Agent</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in appointments %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('properties.detail', id=appt.property.id) }}" style="color:var(--charcoal);text-decoration:none;font-weight:500">
+                                    {{ appt.property.title|truncate(35) }}
+                                </a>
+                                <div class="text-muted" style="font-size:0.78rem">{{ appt.property.city }}</div>
+                            </td>
+                            <td>{{ appt.agent.full_name }}</td>
+                            <td style="white-space:nowrap">{{ appt.scheduled_at.strftime('%d/%m/%Y à %Hh%M') }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if appt.status.value == 'Confirmé' %}badge-success
+                                    {% elif appt.status.value == 'Annulé' %}badge-danger
+                                    {% elif appt.status.value == 'Réalisé' %}badge-info
+                                    {% else %}badge-gray{% endif %}">
+                                    {{ appt.status.value }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:40px;color:var(--mid-gray)">
+                <i class="fas fa-calendar" style="font-size:2.5rem;color:var(--light-gray);margin-bottom:12px"></i>
+                <p>Aucun rendez-vous programmé.</p>
+                <a href="{{ url_for('main.search') }}" class="btn btn-gold btn-sm" style="margin-top:16px">Trouver un bien</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

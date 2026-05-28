@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}Espace agent — Ymmo{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 68px); }
+.sidebar { background: var(--noir); padding: 32px 0; }
+.sidebar-menu { list-style: none; }
+.sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 13px 28px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.875rem; transition: var(--transition); border-left: 3px solid transparent; }
+.sidebar-menu li a:hover, .sidebar-menu li a.active { color: var(--white); background: rgba(255,255,255,0.06); border-left-color: var(--gold); }
+.sidebar-menu li a i { width: 18px; text-align: center; color: var(--gold); }
+.sidebar-section { padding: 12px 28px 8px; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-top: 16px; }
+.dash-content { padding: 40px; background: var(--light-gray); }
+.stat-card { background: var(--white); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow); }
+.stat-card-value { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 600; color: var(--gold); }
+.stat-card-label { font-size: 0.8rem; color: var(--mid-gray); text-transform: uppercase; letter-spacing: 0.08em; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <aside class="sidebar">
+        <div style="padding:0 28px 28px;border-bottom:1px solid rgba(255,255,255,0.08)">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--white)">YM<span style="color:var(--gold)">M</span>O</div>
+            <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;margin-top:4px">Espace agent</div>
+        </div>
+        <ul class="sidebar-menu" style="margin-top:16px">
+            <li><a href="{{ url_for('dashboard.index') }}" class="active"><i class="fas fa-th-large"></i> Tableau de bord</a></li>
+            <div class="sidebar-section">Biens</div>
+            <li><a href="{{ url_for('properties.add') }}"><i class="fas fa-plus"></i> Ajouter un bien</a></li>
+            <li><a href="{{ url_for('main.search') }}"><i class="fas fa-search"></i> Tous les biens</a></li>
+            <div class="sidebar-section">Compte</div>
+            <li><a href="{{ url_for('auth.profile') }}"><i class="fas fa-cog"></i> Mon profil</a></li>
+            <li><a href="{{ url_for('auth.logout') }}" style="color:rgba(192,57,43,0.7) !important"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+        </ul>
+    </aside>
+
+    <div class="dash-content">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;flex-wrap:wrap;gap:16px">
+            <div>
+                <h1 style="font-size:1.8rem">Bonjour, {{ current_user.first_name }} 👋</h1>
+                <p class="text-muted">Gérez vos annonces et vos rendez-vous.</p>
+            </div>
+            <a href="{{ url_for('properties.add') }}" class="btn btn-gold">
+                <i class="fas fa-plus"></i> Nouvelle annonce
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-4" style="margin-bottom:40px">
+            <div class="stat-card">
+                <div class="stat-card-value">{{ properties|length }}</div>
+                <div class="stat-card-label">Mes annonces</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">{{ properties|selectattr('status.value','eq','Disponible')|list|length }}</div>
+                <div class="stat-card-label">Disponibles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">{{ properties|selectattr('status.value','eq','Vendu')|list|length }}</div>
+                <div class="stat-card-label">Vendus</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value">{{ appointments|length }}</div>
+                <div class="stat-card-label">Rendez-vous</div>
+            </div>
+        </div>
+
+        <!-- My properties -->
+        <div class="card" style="padding:28px;margin-bottom:32px">
+            <h2 style="font-size:1.3rem;margin-bottom:24px">🏠 Mes annonces</h2>
+            {% if properties %}
+            <div style="overflow-x:auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bien</th>
+                            <th>Ville</th>
+                            <th>Prix</th>
+                            <th>Statut</th>
+                            <th>Vues</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prop in properties %}
+                        <tr>
+                            <td>
+                                <div style="font-weight:500">{{ prop.title|truncate(40) }}</div>
+                                <div class="text-muted" style="font-size:0.78rem">{{ prop.property_type.value }} · {{ prop.transaction_type.value }}</div>
+                            </td>
+                            <td>{{ prop.city }}</td>
+                            <td style="font-weight:600;color:var(--gold-dark)">{{ "{:,.0f}".format(prop.price) }} €</td>
+                            <td>
+                                <span class="badge
+                                    {% if prop.status.value == 'Disponible' %}badge-success
+                                    {% elif prop.status.value == 'Vendu' or prop.status.value == 'Loué' %}badge-info
+                                    {% elif prop.status.value == 'Sous compromis' %}badge-gold
+                                    {% else %}badge-gray{% endif %}">
+                                    {{ prop.status.value }}
+                                </span>
+                            </td>
+                            <td>{{ prop.views_count }}</td>
+                            <td style="white-space:nowrap">
+                                <a href="{{ url_for('properties.detail', id=prop.id) }}" class="btn btn-outline btn-sm">Voir</a>
+                                <a href="{{ url_for('properties.edit', id=prop.id) }}" class="btn btn-dark btn-sm">Éditer</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:40px;color:var(--mid-gray)">
+                <p>Aucune annonce publiée.</p>
+                <a href="{{ url_for('properties.add') }}" class="btn btn-gold btn-sm" style="margin-top:16px">Ajouter un bien</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Appointments -->
+        <div class="card" style="padding:28px">
+            <h2 style="font-size:1.3rem;margin-bottom:24px">📅 Rendez-vous à venir</h2>
+            {% if appointments %}
+            <table>
+                <thead>
+                    <tr><th>Client</th><th>Bien</th><th>Date</th><th>Statut</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <tr>
+                        <td>{{ appt.client.full_name }}<br><span class="text-muted" style="font-size:0.78rem">{{ appt.client.phone or appt.client.email }}</span></td>
+                        <td><a href="{{ url_for('properties.detail', id=appt.property.id) }}" style="color:var(--charcoal);font-weight:500">{{ appt.property.title|truncate(30) }}</a></td>
+                        <td style="white-space:nowrap">{{ appt.scheduled_at.strftime('%d/%m/%Y à %Hh%M') }}</td>
+                        <td>
+                            <span class="badge {% if appt.status.value == 'Confirmé' %}badge-success{% elif appt.status.value == 'Annulé' %}badge-danger{% else %}badge-gray{% endif %}">
+                                {{ appt.status.value }}
+                            </span>
+                        </td>
+                        <td class="text-muted" style="font-size:0.82rem">{{ appt.notes|truncate(40) if appt.notes else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align:center;padding:40px;color:var(--mid-gray)">
+                <p>Aucun rendez-vous pour le moment.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

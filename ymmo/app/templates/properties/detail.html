@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}{{ property.title }} — Ymmo{% endblock %}
+{% block extra_css %}
+<style>
+.detail-grid{display:grid;grid-template-columns:1fr 380px;gap:40px;padding:40px 5%}
+.gallery{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:320px 160px;gap:8px;border-radius:var(--radius-lg);overflow:hidden;margin-bottom:32px}
+.gallery-main{grid-row:1/-1}
+.gallery img,.gallery .img-placeholder{width:100%;height:100%;object-fit:cover}
+.contact-card{background:var(--white);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);position:sticky;top:88px}
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.feature-item{display:flex;align-items:center;gap:10px;padding:12px;background:var(--light-gray);border-radius:var(--radius);font-size:0.875rem}
+.amenity-tag{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(201,168,76,0.08);border:1px solid var(--border);border-radius:50px;font-size:0.8rem;color:var(--gold-dark);margin:4px}
+@media(max-width:900px){.detail-grid{grid-template-columns:1fr}.gallery{grid-template-columns:1fr;grid-template-rows:280px 140px 140px}.gallery-main{grid-row:auto}}
+</style>
+{% endblock %}
+{% block content %}
+<div style="background:var(--light-gray);padding:14px 5%;font-size:0.85rem;color:var(--mid-gray)">
+    <a href="{{ url_for('main.index') }}" style="color:var(--mid-gray);text-decoration:none">Accueil</a> /
+    <a href="{{ url_for('main.search') }}" style="color:var(--mid-gray);text-decoration:none">Biens</a> /
+    {{ property.title }}
+</div>
+<div class="detail-grid">
+    <div>
+        {% if property.images %}
+        <div class="gallery">
+            {% for img in property.images[:3] %}
+            <div {% if loop.first %}class="gallery-main"{% endif %}>
+                <img src="{{ url_for('static', filename='img/properties/' + img.filename) }}" onerror="this.outerHTML='<div class=\'img-placeholder\' style=\'height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--mid-gray)\'><i class=\'fas fa-building\'></i></div>'" alt="{{ property.title }}">
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="height:480px;background:var(--light-gray);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:4rem;color:var(--mid-gray);margin-bottom:32px"><i class="fas fa-building"></i></div>
+        {% endif %}
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+            <div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                    <span class="badge badge-gold">{{ property.transaction_type.value }}</span>
+                    <span class="badge badge-gray">{{ property.property_type.value }}</span>
+                    <span class="badge {% if property.status.value == 'Disponible' %}badge-success{% else %}badge-danger{% endif %}">{{ property.status.value }}</span>
+                </div>
+                <h1 style="font-size:2rem;margin-bottom:8px">{{ property.title }}</h1>
+                <div style="color:var(--mid-gray);font-size:0.95rem"><i class="fas fa-map-marker-alt" style="color:var(--gold)"></i> {{ property.address or '' }} {{ property.city }} {{ property.zip_code or '' }}</div>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button onclick="toggleFav(this,{{ property.id }})" class="btn btn-outline {% if is_favorited %}btn-danger{% endif %}"><i class="fas fa-heart"></i></button>
+            </div>
+        </div>
+        <div class="feature-grid" style="margin-bottom:32px">
+            {% if property.surface %}<div class="feature-item"><i class="fas fa-ruler-combined" style="color:var(--gold)"></i><div><strong>{{ property.surface }} m²</strong><br><span class="text-muted" style="font-size:0.78rem">Surface</span></div></div>{% endif %}
+            {% if property.rooms %}<div class="feature-item"><i class="fas fa-door-open" style="color:var(--gold)"></i><div><strong>{{ property.rooms }} pièces</strong><br><span class="text-muted" style="font-size:0.78rem">Pièces</span></div></div>{% endif %}
+            {% if property.bedrooms %}<div class="feature-item"><i class="fas fa-bed" style="color:var(--gold)"></i><div><strong>{{ property.bedrooms }} ch.</strong><br><span class="text-muted" style="font-size:0.78rem">Chambres</span></div></div>{% endif %}
+            {% if property.bathrooms %}<div class="feature-item"><i class="fas fa-bath" style="color:var(--gold)"></i><div><strong>{{ property.bathrooms }} sdb</strong><br><span class="text-muted" style="font-size:0.78rem">Salles de bain</span></div></div>{% endif %}
+            {% if property.year_built %}<div class="feature-item"><i class="fas fa-calendar" style="color:var(--gold)"></i><div><strong>{{ property.year_built }}</strong><br><span class="text-muted" style="font-size:0.78rem">Construction</span></div></div>{% endif %}
+            {% if property.energy_class %}<div class="feature-item"><i class="fas fa-leaf" style="color:var(--gold)"></i><div><strong>DPE {{ property.energy_class }}</strong><br><span class="text-muted" style="font-size:0.78rem">Énergie</span></div></div>{% endif %}
+        </div>
+        {% if property.description %}
+        <h3 style="margin-bottom:16px">Description</h3>
+        <p style="line-height:1.9;color:var(--mid-gray);margin-bottom:32px">{{ property.description }}</p>
+        {% endif %}
+        <h3 style="margin-bottom:16px">Équipements</h3>
+        <div style="margin-bottom:32px">
+            {% if property.has_parking %}<span class="amenity-tag"><i class="fas fa-car"></i> Parking</span>{% endif %}
+            {% if property.has_garden %}<span class="amenity-tag"><i class="fas fa-leaf"></i> Jardin</span>{% endif %}
+            {% if property.has_pool %}<span class="amenity-tag"><i class="fas fa-swimming-pool"></i> Piscine</span>{% endif %}
+            {% if property.has_balcony %}<span class="amenity-tag"><i class="fas fa-door-open"></i> Balcon</span>{% endif %}
+            {% if property.has_elevator %}<span class="amenity-tag"><i class="fas fa-chevron-up"></i> Ascenseur</span>{% endif %}
+            {% if property.has_cellar %}<span class="amenity-tag"><i class="fas fa-box"></i> Cave</span>{% endif %}
+            {% if property.is_furnished %}<span class="amenity-tag"><i class="fas fa-couch"></i> Meublé</span>{% endif %}
+        </div>
+        {% if property.agent %}
+        <div style="background:var(--light-gray);border-radius:var(--radius-lg);padding:20px;display:flex;align-items:center;gap:16px">
+            <div style="width:52px;height:52px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:var(--noir)">{{ property.agent.first_name[0] }}{{ property.agent.last_name[0] }}</div>
+            <div>
+                <div style="font-weight:600">{{ property.agent.full_name }}</div>
+                <div class="text-muted" style="font-size:0.85rem">Agent immobilier{% if property.agency %} · {{ property.agency.name }}{% endif %}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div>
+        <div class="contact-card">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:600;color:var(--gold-dark)">{{ "{:,.0f}".format(property.price) }} €{% if property.transaction_type.value == 'Location' %}<span style="font-size:1rem;font-weight:300">/mois</span>{% endif %}</div>
+            {% if property.price_per_m2 %}<div class="text-muted" style="font-size:0.875rem;margin-bottom:20px">{{ "{:,.0f}".format(property.price_per_m2) }} €/m²</div>{% endif %}
+            <hr class="divider">
+            {% if property.status.value == 'Disponible' and current_user.is_authenticated %}
+            <div style="font-size:0.85rem;font-weight:600;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.06em">Prendre rendez-vous</div>
+            <form action="{{ url_for('properties.book_appointment', id=property.id) }}" method="POST">
+                <div class="form-group"><label class="form-label">Agent</label>
+                    <select name="agent_id" class="form-control form-select">
+                        {% for agent in agents %}<option value="{{ agent.id }}" {% if property.agent and agent.id == property.agent.id %}selected{% endif %}>{{ agent.full_name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Date et heure</label><input type="datetime-local" name="scheduled_at" class="form-control" required></div>
+                <div class="form-group"><label class="form-label">Message</label><textarea name="notes" class="form-control" rows="3" placeholder="Vos questions..."></textarea></div>
+                <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center"><i class="fas fa-calendar-check"></i> Demander un RDV</button>
+            </form>
+            {% elif not current_user.is_authenticated %}
+            <div style="text-align:center;padding:20px 0">
+                <p class="text-muted" style="margin-bottom:16px;font-size:0.9rem">Connectez-vous pour prendre rendez-vous</p>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-gold" style="width:100%;justify-content:center">Se connecter</a>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:16px;background:var(--light-gray);border-radius:var(--radius)">
+                <span class="badge badge-danger">{{ property.status.value }}</span>
+                <p class="text-muted" style="margin-top:8px;font-size:0.85rem">Ce bien n'est plus disponible</p>
+            </div>
+            {% endif %}
+            {% if current_user.is_authenticated and (current_user.is_admin or (current_user.is_agent and property.agent_id == current_user.id)) %}
+            <hr class="divider">
+            <a href="{{ url_for('properties.edit', id=property.id) }}" class="btn btn-outline" style="width:100%;justify-content:center;margin-bottom:8px"><i class="fas fa-edit"></i> Modifier</a>
+            <form action="{{ url_for('properties.delete', id=property.id) }}" method="POST" onsubmit="return confirm('Supprimer ce bien ?')">
+                <button type="submit" class="btn btn-danger btn-sm" style="width:100%;justify-content:center"><i class="fas fa-trash"></i> Supprimer</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% if similar %}
+<section style="padding:0 5% 64px">
+    <h2 style="margin-bottom:24px">Biens similaires</h2>
+    <div class="grid grid-3">
+        {% for prop in similar %}
+        <div class="card prop-card">
+            <div class="prop-card-img" style="height:180px">
+                <img src="{{ url_for('static', filename='img/properties/' + prop.main_image) }}" onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\' style=\'height:180px\'><i class=\'fas fa-building\'></i></div>'" alt="{{ prop.title }}" loading="lazy">
+            </div>
+            <div class="prop-card-body">
+                <div class="prop-card-price" style="font-size:1.2rem">{{ "{:,.0f}".format(prop.price) }} €</div>
+                <div class="prop-card-title">{{ prop.title }}</div>
+                <div class="prop-card-location">📍 {{ prop.city }}</div>
+                <a href="{{ url_for('properties.detail', id=prop.id) }}" class="btn btn-dark btn-sm" style="width:100%;justify-content:center;margin-top:12px">Voir →</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script>
+function toggleFav(btn,id){
+{% if current_user.is_authenticated %}
+fetch(`/biens/${id}/favori`,{method:'POST'}).then(r=>r.json()).then(d=>btn.classList.toggle('btn-danger',d.status==='added'));
+{% else %}window.location='/auth/connexion';{% endif %}
+}
+</script>
+{% endblock %}

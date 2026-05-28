@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Ymmo — Immobilier de prestige en France{% endblock %}
+{% block extra_css %}
+<style>
+.hero{min-height:92vh;background:linear-gradient(160deg,var(--noir) 0%,#1A1208 60%,#2C1F00 100%);display:flex;align-items:center;padding:0 5%;position:relative;overflow:hidden}
+.hero-content{position:relative;z-index:1;max-width:680px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:0.75rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:24px}
+.hero-eyebrow::before{content:'';width:40px;height:1px;background:var(--gold)}
+.search-bar{background:var(--white);border-radius:var(--radius-lg);padding:8px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;box-shadow:var(--shadow-lg);margin-top:48px}
+.search-bar select,.search-bar input{border:none;outline:none;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:transparent;color:var(--charcoal);flex:1;min-width:140px}
+.search-bar .sep{width:1px;height:32px;background:#E0DDD8}
+.stats-bar{background:var(--white);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(4,1fr);padding:32px 5%}
+.stats-bar .stat-item{border-right:1px solid var(--border)}.stats-bar .stat-item:last-child{border-right:none}
+.hot-zone-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;display:flex;justify-content:space-between;align-items:center;transition:var(--transition)}
+.hot-zone-card:hover{border-color:var(--gold);box-shadow:var(--shadow)}
+.cta-banner{background:linear-gradient(135deg,var(--noir),#2C1F00);border-radius:var(--radius-lg);padding:64px;text-align:center}
+</style>
+{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-eyebrow">Groupe Immobilier Ymmo</div>
+        <h1 style="color:var(--white);margin-bottom:20px;font-weight:300">Trouvez le bien<br>qui vous <em style="font-style:italic;color:var(--gold)">ressemble</em></h1>
+        <p style="color:rgba(255,255,255,0.65);font-size:1.1rem;max-width:500px;margin-bottom:40px;line-height:1.8">12 agences en France. Des milliers de biens résidentiels et professionnels.</p>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <a href="{{ url_for('main.search') }}?transaction=Vente" class="btn btn-gold btn-lg"><i class="fas fa-home"></i> Acheter</a>
+            <a href="{{ url_for('main.search') }}?transaction=Location" class="btn btn-outline-gold btn-lg"><i class="fas fa-key"></i> Louer</a>
+        </div>
+        <form class="search-bar" action="{{ url_for('main.search') }}" method="GET">
+            <select name="transaction" style="min-width:110px"><option value="">Type</option><option value="Vente">Vente</option><option value="Location">Location</option></select>
+            <div class="sep"></div>
+            <input type="text" name="city" placeholder="Ville...">
+            <div class="sep"></div>
+            <select name="type" style="min-width:130px"><option value="">Type de bien</option><option value="Appartement">Appartement</option><option value="Maison">Maison</option><option value="Villa">Villa</option><option value="Bureau">Bureau</option></select>
+            <div class="sep"></div>
+            <input type="number" name="max_price" placeholder="Budget max (€)" style="min-width:160px">
+            <button type="submit" class="btn btn-gold"><i class="fas fa-search"></i> Rechercher</button>
+        </form>
+    </div>
+</section>
+<div class="stats-bar">
+    <div class="stat-item"><div class="stat-value">{{ "{:,.0f}".format(stats.total_transactions or 847) }}</div><div class="stat-label">Transactions / an</div></div>
+    <div class="stat-item"><div class="stat-value">{{ "{:,.0f}".format(stats.avg_price_per_m2 or 4250) }} €</div><div class="stat-label">Prix moyen /m²</div></div>
+    <div class="stat-item"><div class="stat-value">12</div><div class="stat-label">Agences en France</div></div>
+    <div class="stat-item"><div class="stat-value">98%</div><div class="stat-label">Clients satisfaits</div></div>
+</div>
+{% if featured %}
+<section class="section">
+    <div class="section-header"><div class="section-label">Sélection</div><h2>Biens à la une</h2></div>
+    <div class="grid grid-3">
+        {% for prop in featured %}
+        <div class="card prop-card">
+            <div class="prop-card-img">
+                <img src="{{ url_for('static', filename='img/properties/' + prop.main_image) }}" onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\' style=\'height:220px\'><i class=\'fas fa-building\'></i></div>'" alt="{{ prop.title }}">
+                <span class="prop-card-badge">{{ prop.transaction_type.value }}</span>
+                <button class="prop-card-fav" onclick="toggleFav(this,{{ prop.id }})"><i class="fas fa-heart"></i></button>
+            </div>
+            <div class="prop-card-body">
+                <div class="prop-card-price">{{ "{:,.0f}".format(prop.price) }} €</div>
+                <div class="prop-card-title">{{ prop.title }}</div>
+                <div class="prop-card-location"><i class="fas fa-map-marker-alt" style="color:var(--gold)"></i> {{ prop.city }}</div>
+                <div class="prop-card-features">
+                    {% if prop.surface %}<span><i class="fas fa-ruler-combined"></i> {{ prop.surface }}m²</span>{% endif %}
+                    {% if prop.rooms %}<span><i class="fas fa-door-open"></i> {{ prop.rooms }} p.</span>{% endif %}
+                    {% if prop.bedrooms %}<span><i class="fas fa-bed"></i> {{ prop.bedrooms }} ch.</span>{% endif %}
+                </div>
+                <div style="margin-top:16px"><a href="{{ url_for('properties.detail', id=prop.id) }}" class="btn btn-dark btn-sm" style="width:100%;justify-content:center">Voir le bien →</a></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="text-center mt-4"><a href="{{ url_for('main.search') }}" class="btn btn-outline">Voir tous les biens</a></div>
+</section>
+{% endif %}
+{% if recent %}
+<section class="section" style="background:var(--light-gray);padding-top:48px;padding-bottom:48px">
+    <div class="section-header"><div class="section-label">Nouveautés</div><h2>Derniers biens ajoutés</h2></div>
+    <div class="grid grid-4">
+        {% for prop in recent %}
+        <div class="card prop-card">
+            <div class="prop-card-img" style="height:180px">
+                <img src="{{ url_for('static', filename='img/properties/' + prop.main_image) }}" onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\' style=\'height:180px\'><i class=\'fas fa-building\'></i></div>'" alt="{{ prop.title }}" loading="lazy">
+                <span class="prop-card-badge">{{ prop.transaction_type.value }}</span>
+            </div>
+            <div class="prop-card-body">
+                <div class="prop-card-price" style="font-size:1.15rem">{{ "{:,.0f}".format(prop.price) }} €</div>
+                <div class="prop-card-title">{{ prop.title }}</div>
+                <div class="prop-card-location">📍 {{ prop.city }}</div>
+                <a href="{{ url_for('properties.detail', id=prop.id) }}" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:12px">Détails</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% if hot_zones %}
+<section class="section">
+    <div class="section-header"><div class="section-label">Analyse de marché</div><h2>Zones les plus dynamiques</h2><p class="text-muted mt-2">6 derniers mois</p></div>
+    <div class="grid grid-2">
+        {% for zone in hot_zones %}
+        <div class="hot-zone-card">
+            <div><div style="font-weight:600;margin-bottom:4px">{{ zone.city }}</div><div class="text-muted" style="font-size:0.85rem">{{ zone.volume }} transactions récentes</div></div>
+            <div style="text-align:right"><div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;color:var(--gold)">{{ "{:,.0f}".format(zone.avg_pm2) }} €/m²</div><div class="text-muted" style="font-size:0.8rem">moy. {{ "{:,.0f}".format(zone.avg_price) }} €</div></div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+<section style="padding:0 5% 80px">
+    <div class="cta-banner">
+        <div class="section-label">Estimation IA</div>
+        <h2 style="color:var(--white);margin-bottom:16px">Combien vaut votre bien ?</h2>
+        <p style="color:rgba(255,255,255,0.65);max-width:500px;margin:0 auto 32px">Notre algorithme analyse les données du marché pour une estimation précise.</p>
+        <a href="{{ url_for('main.estimation') }}" class="btn btn-gold btn-lg"><i class="fas fa-calculator"></i> Estimer maintenant</a>
+    </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+function toggleFav(btn,id){
+{% if current_user.is_authenticated %}
+fetch(`/biens/${id}/favori`,{method:'POST'}).then(r=>r.json()).then(d=>btn.classList.toggle('active',d.status==='added'));
+{% else %}window.location='/auth/connexion';{% endif %}
+}
+</script>
+{% endblock %}

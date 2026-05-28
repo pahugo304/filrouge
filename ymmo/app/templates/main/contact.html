@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Contact — Ymmo{% endblock %}
+{% block content %}
+<div style="background:var(--noir);padding:64px 5%;text-align:center">
+    <div class="section-label">Contactez-nous</div>
+    <h1 style="color:var(--white)">Nous sommes à votre écoute</h1>
+</div>
+
+<div class="section">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;max-width:1000px;margin:0 auto">
+        <div>
+            <h2 style="margin-bottom:24px">Siège social</h2>
+            <div style="display:flex;flex-direction:column;gap:20px">
+                <div style="display:flex;gap:16px;align-items:flex-start">
+                    <div style="width:44px;height:44px;border-radius:var(--radius-lg);background:rgba(201,168,76,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-map-marker-alt text-gold"></i></div>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:2px">Adresse</div>
+                        <div class="text-muted">1 Cours Mirabeau<br>13100 Aix-en-Provence</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:16px;align-items:flex-start">
+                    <div style="width:44px;height:44px;border-radius:var(--radius-lg);background:rgba(201,168,76,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-phone text-gold"></i></div>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:2px">Téléphone</div>
+                        <div class="text-muted">04 XX XX XX XX</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:16px;align-items:flex-start">
+                    <div style="width:44px;height:44px;border-radius:var(--radius-lg);background:rgba(201,168,76,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-envelope text-gold"></i></div>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:2px">Email</div>
+                        <div class="text-muted">contact@ymmo.fr</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:16px;align-items:flex-start">
+                    <div style="width:44px;height:44px;border-radius:var(--radius-lg);background:rgba(201,168,76,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-clock text-gold"></i></div>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:2px">Horaires</div>
+                        <div class="text-muted">Lun – Ven : 9h00 – 18h00<br>Samedi : 9h00 – 12h00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="padding:36px">
+            <h2 style="font-size:1.3rem;margin-bottom:24px">Envoyer un message</h2>
+            <div class="form-group">
+                <label class="form-label">Nom complet</label>
+                <input type="text" class="form-control" placeholder="Jean Dupont">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" placeholder="jean@email.fr">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Sujet</label>
+                <select class="form-control form-select">
+                    <option>Demande de renseignements</option>
+                    <option>Estimation de bien</option>
+                    <option>Partenariat</option>
+                    <option>Autre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Message</label>
+                <textarea class="form-control" rows="5" placeholder="Votre message..."></textarea>
+            </div>
+            <button class="btn btn-gold" style="width:100%;justify-content:center" onclick="alert('Message envoyé ! (formulaire de démonstration)')">
+                <i class="fas fa-paper-plane"></i> Envoyer
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

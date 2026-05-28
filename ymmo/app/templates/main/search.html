@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Recherche — Ymmo{% endblock %}
+{% block extra_css %}
+<style>
+.search-page{display:grid;grid-template-columns:280px 1fr;gap:32px;padding:40px 5%}
+.filters-panel{background:var(--white);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);height:fit-content;position:sticky;top:88px}
+@media(max-width:900px){.search-page{grid-template-columns:1fr}.filters-panel{position:static}}
+</style>
+{% endblock %}
+{% block content %}
+<div style="background:var(--noir);padding:32px 5%"><h1 style="color:var(--white);font-size:1.8rem">Recherche de biens</h1></div>
+<div class="search-page">
+    <aside class="filters-panel">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:24px">Filtres</div>
+        <form method="GET" action="{{ url_for('main.search') }}">
+            <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--light-gray)">
+                <label class="form-label">Transaction</label>
+                {% for t in transaction_types %}
+                <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer">
+                    <input type="radio" name="transaction" value="{{ t.value }}" {% if current_filters.transaction == t.value %}checked{% endif %} onchange="this.form.submit()">
+                    <span>{{ t.value }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="form-group"><label class="form-label">Type de bien</label>
+                <select name="type" class="form-control form-select" onchange="this.form.submit()">
+                    <option value="">Tous</option>
+                    {% for pt in property_types %}<option value="{{ pt.value }}" {% if current_filters.type == pt.value %}selected{% endif %}>{{ pt.value }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group"><label class="form-label">Ville</label><input type="text" name="city" class="form-control" placeholder="Ex: Lyon" value="{{ current_filters.city or '' }}"></div>
+            <div class="form-group"><label class="form-label">Budget (€)</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ current_filters.min_price or '' }}">
+                    <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ current_filters.max_price or '' }}">
+                </div>
+            </div>
+            <div class="form-group"><label class="form-label">Surface (m²)</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <input type="number" name="min_surface" class="form-control" placeholder="Min" value="{{ current_filters.min_surface or '' }}">
+                    <input type="number" name="max_surface" class="form-control" placeholder="Max" value="{{ current_filters.max_surface or '' }}">
+                </div>
+            </div>
+            <div class="form-group"><label class="form-label">Pièces min.</label>
+                <div style="display:flex;gap:6px">
+                    {% for n in [1,2,3,4,5] %}
+                    <label><input type="radio" name="rooms" value="{{ n }}" {% if current_filters.rooms == n %}checked{% endif %} style="display:none" onchange="this.form.submit()">
+                    <span style="width:36px;height:36px;border-radius:var(--radius);border:1px solid {% if current_filters.rooms == n %}var(--gold){% else %}#ddd{% endif %};background:{% if current_filters.rooms == n %}var(--gold){% else %}transparent{% endif %};display:flex;align-items:center;justify-content:center;font-size:0.85rem;cursor:pointer">{{ n }}+</span></label>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center"><i class="fas fa-search"></i> Appliquer</button>
+            <a href="{{ url_for('main.search') }}" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:8px">Réinitialiser</a>
+        </form>
+    </aside>
+    <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem"><span style="color:var(--gold)">{{ properties.total }}</span> bien{{ 's' if properties.total > 1 }}</div>
+            <form method="GET">
+                {% for k,v in current_filters.items() %}{% if v and k != 'sort' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+                <select name="sort" style="border:1px solid #ddd;border-radius:var(--radius);padding:8px 12px;font-size:0.875rem" onchange="this.form.submit()">
+                    <option value="recent" {% if current_filters.sort=='recent' %}selected{% endif %}>Plus récents</option>
+                    <option value="price_asc" {% if current_filters.sort=='price_asc' %}selected{% endif %}>Prix croissant</option>
+                    <option value="price_desc" {% if current_filters.sort=='price_desc' %}selected{% endif %}>Prix décroissant</option>
+                    <option value="surface" {% if current_filters.sort=='surface' %}selected{% endif %}>Plus grands</option>
+                </select>
+            </form>
+        </div>
+        {% if properties.items %}
+        <div class="grid grid-3" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">
+            {% for prop in properties.items %}
+            <div class="card prop-card">
+                <div class="prop-card-img">
+                    <img src="{{ url_for('static', filename='img/properties/' + prop.main_image) }}" onerror="this.parentElement.innerHTML='<div class=\'img-placeholder\' style=\'height:220px\'><i class=\'fas fa-building\'></i></div>'" alt="{{ prop.title }}" loading="lazy">
+                    <span class="prop-card-badge">{{ prop.transaction_type.value }}</span>
+                    {% if current_user.is_authenticated %}<button class="prop-card-fav" onclick="toggleFav(this,{{ prop.id }})"><i class="fas fa-heart"></i></button>{% endif %}
+                </div>
+                <div class="prop-card-body">
+                    <div class="prop-card-price">{{ "{:,.0f}".format(prop.price) }} €</div>
+                    {% if prop.price_per_m2 %}<div class="text-muted" style="font-size:0.8rem;margin-top:-4px;margin-bottom:6px">{{ "{:,.0f}".format(prop.price_per_m2) }} €/m²</div>{% endif %}
+                    <div class="prop-card-title">{{ prop.title }}</div>
+                    <div class="prop-card-location">📍 {{ prop.city }}</div>
+                    <div class="prop-card-features"><span>{{ prop.property_type.value }}</span>{% if prop.surface %}<span>{{ prop.surface }}m²</span>{% endif %}{% if prop.rooms %}<span>{{ prop.rooms }} p.</span>{% endif %}</div>
+                    <div style="margin-top:16px"><a href="{{ url_for('properties.detail', id=prop.id) }}" class="btn btn-dark btn-sm" style="width:100%;justify-content:center">Voir →</a></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if properties.pages > 1 %}
+        <div class="pagination">
+            {% if properties.has_prev %}<a href="?{% for k,v in current_filters.items() %}{% if v %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ properties.prev_num }}" class="page-btn">‹</a>{% endif %}
+            {% for p in properties.iter_pages(left_edge=2,right_edge=2,left_current=2,right_current=2) %}
+                {% if p %}<a href="?{% for k,v in current_filters.items() %}{% if v %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ p }}" class="page-btn {{ 'active' if p==properties.page }}">{{ p }}</a>
+                {% else %}<span class="page-btn disabled">…</span>{% endif %}
+            {% endfor %}
+            {% if properties.has_next %}<a href="?{% for k,v in current_filters.items() %}{% if v %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ properties.next_num }}" class="page-btn">›</a>{% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div style="text-align:center;padding:64px;background:var(--white);border-radius:var(--radius-lg)">
+            <i class="fas fa-search" style="font-size:3rem;color:var(--gold);margin-bottom:20px"></i>
+            <h3>Aucun bien trouvé</h3>
+            <p class="text-muted mt-2">Essayez de modifier vos critères.</p>
+            <a href="{{ url_for('main.search') }}" class="btn btn-gold mt-4">Voir tous les biens</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>function toggleFav(btn,id){fetch(`/biens/${id}/favori`,{method:'POST'}).then(r=>r.json()).then(d=>btn.classList.toggle('active',d.status==='added'));}</script>
+{% endblock %}

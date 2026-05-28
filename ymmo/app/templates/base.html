@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Ymmo{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--gold:#C9A84C;--gold-light:#E8CFA0;--gold-dark:#8B6914;--noir:#0A0A0A;--charcoal:#1A1A1A;--dark-gray:#2C2C2C;--mid-gray:#6B6B6B;--light-gray:#F5F4F2;--cream:#FDFCF9;--white:#FFFFFF;--success:#2D7D46;--danger:#C0392B;--warning:#D4AC0D;--info:#1A6FA8;--border:rgba(201,168,76,0.2);--shadow:0 4px 24px rgba(0,0,0,0.08);--shadow-lg:0 16px 48px rgba(0,0,0,0.14);--radius:4px;--radius-lg:8px;--transition:all 0.3s cubic-bezier(0.4,0,0.2,1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--charcoal);line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
+h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:300;letter-spacing:0.02em}
+h1{font-size:clamp(2rem,5vw,3.5rem);line-height:1.15}
+h2{font-size:clamp(1.5rem,3vw,2.2rem)}
+h3{font-size:1.3rem}
+.gold{color:var(--gold)}
+nav.navbar{position:sticky;top:0;z-index:1000;background:var(--noir);border-bottom:1px solid var(--border);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:68px}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--white);text-decoration:none;letter-spacing:0.08em}
+.nav-brand span{color:var(--gold)}
+.nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
+.nav-links a{color:rgba(255,255,255,0.75);text-decoration:none;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:500;transition:var(--transition);padding:4px 0;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1px;background:var(--gold);transition:width 0.3s ease}
+.nav-links a:hover{color:var(--white)}.nav-links a:hover::after{width:100%}
+.nav-cta{background:var(--gold)!important;color:var(--noir)!important;padding:8px 20px!important;border-radius:var(--radius);font-weight:600!important}
+.nav-cta:hover{background:var(--gold-light)!important}.nav-cta::after{display:none!important}
+.nav-dropdown{position:relative}
+.nav-dropdown-menu{position:absolute;top:calc(100% + 12px);right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);min-width:200px;box-shadow:var(--shadow-lg);opacity:0;visibility:hidden;transform:translateY(-8px);transition:var(--transition);overflow:hidden}
+.nav-dropdown:hover .nav-dropdown-menu{opacity:1;visibility:visible;transform:translateY(0)}
+.nav-dropdown-menu a{display:block;padding:10px 18px;color:var(--charcoal)!important;font-size:0.9rem!important;letter-spacing:0!important;text-transform:none!important;border-bottom:1px solid var(--light-gray);text-decoration:none}
+.nav-dropdown-menu a:last-child{border-bottom:none}.nav-dropdown-menu a:hover{background:var(--light-gray)}.nav-dropdown-menu a::after{display:none!important}
+.hamburger{display:none;cursor:pointer;flex-direction:column;gap:5px}
+.hamburger span{display:block;width:24px;height:2px;background:var(--white);transition:var(--transition)}
+.alerts-container{position:fixed;top:80px;right:20px;z-index:2000;max-width:380px}
+.alert{padding:14px 18px;border-radius:var(--radius-lg);margin-bottom:8px;font-size:0.9rem;display:flex;align-items:center;gap:10px;animation:slideInRight 0.4s ease;box-shadow:var(--shadow-lg);cursor:pointer}
+@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+.alert-success{background:#D4EDDA;border-left:4px solid var(--success);color:#155724}
+.alert-danger{background:#F8D7DA;border-left:4px solid var(--danger);color:#721C24}
+.alert-warning{background:#FFF3CD;border-left:4px solid var(--warning);color:#856404}
+.alert-info{background:#D1ECF1;border-left:4px solid var(--info);color:#0C5460}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;letter-spacing:0.05em;text-decoration:none;border:none;cursor:pointer;transition:var(--transition)}
+.btn-gold{background:var(--gold);color:var(--noir)}.btn-gold:hover{background:var(--gold-dark);color:var(--white);transform:translateY(-1px);box-shadow:0 8px 24px rgba(201,168,76,0.3)}
+.btn-outline-gold{background:transparent;color:var(--gold);border:1px solid var(--gold)}.btn-outline-gold:hover{background:var(--gold);color:var(--noir)}
+.btn-dark{background:var(--noir);color:var(--white)}.btn-dark:hover{background:var(--dark-gray);transform:translateY(-1px)}
+.btn-outline{background:transparent;color:var(--charcoal);border:1px solid #ddd}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-danger{background:var(--danger);color:var(--white)}
+.btn-sm{padding:8px 16px;font-size:0.82rem}.btn-lg{padding:16px 40px;font-size:1rem}
+.card{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;transition:var(--transition);border:1px solid rgba(0,0,0,0.05)}
+.card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.prop-card{display:flex;flex-direction:column}
+.prop-card-img{position:relative;overflow:hidden;height:220px;background:var(--light-gray)}
+.prop-card-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease}
+.prop-card:hover .prop-card-img img{transform:scale(1.05)}
+.prop-card-badge{position:absolute;top:12px;left:12px;background:var(--gold);color:var(--noir);padding:4px 12px;border-radius:2px;font-size:0.75rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.prop-card-fav{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.9);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid-gray);transition:var(--transition)}
+.prop-card-fav:hover,.prop-card-fav.active{color:#E74C3C}
+.prop-card-body{padding:20px;flex:1;display:flex;flex-direction:column}
+.prop-card-price{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;color:var(--gold-dark);margin-bottom:6px}
+.prop-card-title{font-size:0.95rem;font-weight:500;margin-bottom:8px;color:var(--charcoal)}
+.prop-card-location{font-size:0.82rem;color:var(--mid-gray);margin-bottom:12px}
+.prop-card-features{display:flex;gap:16px;flex-wrap:wrap;font-size:0.8rem;color:var(--mid-gray)}
+.prop-card-features span{display:flex;align-items:center;gap:4px}
+.grid{display:grid}
+.grid-2{grid-template-columns:repeat(2,1fr);gap:24px}
+.grid-3{grid-template-columns:repeat(3,1fr);gap:24px}
+.grid-4{grid-template-columns:repeat(4,1fr);gap:24px}
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-size:0.82rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;color:var(--mid-gray)}
+.form-control{width:100%;padding:12px 16px;border:1px solid #E0DDD8;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:0.95rem;background:var(--white);transition:var(--transition);color:var(--charcoal)}
+.form-control:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.1)}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B6B' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+.form-check{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.form-check input[type=checkbox]{width:18px;height:18px;accent-color:var(--gold)}
+.section{padding:80px 5%}
+.section-sm{padding:48px 5%}
+.section-header{margin-bottom:48px}
+.section-label{font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:12px}
+.stat-item{text-align:center}
+.stat-value{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;color:var(--gold)}
+.stat-label{font-size:0.8rem;color:var(--mid-gray);text-transform:uppercase;letter-spacing:0.08em}
+table{width:100%;border-collapse:collapse}
+th{padding:12px 16px;text-align:left;font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--mid-gray);border-bottom:2px solid var(--light-gray)}
+td{padding:14px 16px;font-size:0.9rem;border-bottom:1px solid var(--light-gray)}
+tr:hover td{background:var(--light-gray)}
+.badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:0.75rem;font-weight:500}
+.badge-gold{background:rgba(201,168,76,0.15);color:var(--gold-dark)}
+.badge-success{background:rgba(45,125,70,0.1);color:var(--success)}
+.badge-danger{background:rgba(192,57,43,0.1);color:var(--danger)}
+.badge-info{background:rgba(26,111,168,0.1);color:var(--info)}
+.badge-gray{background:var(--light-gray);color:var(--mid-gray)}
+footer{background:var(--noir);color:rgba(255,255,255,0.6);margin-top:auto}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;padding:64px 5%}
+.footer-brand{font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--white);font-weight:600;margin-bottom:16px}
+.footer-brand span{color:var(--gold)}
+.footer-title{font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--white);margin-bottom:20px}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:10px}
+.footer-links a{color:rgba(255,255,255,0.55);text-decoration:none;font-size:0.875rem;transition:var(--transition)}
+.footer-links a:hover{color:var(--gold)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.08);padding:20px 5%;display:flex;justify-content:space-between;align-items:center;font-size:0.8rem}
+.container{max-width:1280px;margin:0 auto;padding:0 5%}
+.text-center{text-align:center}.text-gold{color:var(--gold)}.text-muted{color:var(--mid-gray)}
+.mt-1{margin-top:8px}.mt-2{margin-top:16px}.mt-3{margin-top:24px}.mt-4{margin-top:32px}.mt-5{margin-top:48px}
+.mb-1{margin-bottom:8px}.mb-2{margin-bottom:16px}.mb-3{margin-bottom:24px}
+.flex{display:flex}.flex-center{display:flex;align-items:center;justify-content:center}
+.gap-1{gap:8px}.gap-2{gap:16px}.gap-3{gap:24px}
+.divider{border:none;border-top:1px solid var(--border);margin:32px 0}
+.img-placeholder{background:linear-gradient(135deg,var(--light-gray),#E8E5E0);display:flex;align-items:center;justify-content:center;color:var(--mid-gray);font-size:3rem}
+.pagination{display:flex;gap:8px;justify-content:center;margin-top:48px}
+.page-btn{width:40px;height:40px;border-radius:var(--radius);border:1px solid #ddd;background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.9rem;text-decoration:none;color:var(--charcoal);transition:var(--transition)}
+.page-btn.active,.page-btn:hover{background:var(--gold);border-color:var(--gold);color:var(--noir)}
+.page-btn.disabled{opacity:0.4;pointer-events:none}
+@media(max-width:1024px){.grid-4{grid-template-columns:repeat(2,1fr)}.footer-top{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.nav-links{display:none;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:var(--noir);padding:24px 5%;gap:16px}.nav-links.open{display:flex}.hamburger{display:flex}.footer-top{grid-template-columns:1fr;gap:32px}.footer-bottom{flex-direction:column;gap:12px;text-align:center}.section{padding:48px 5%}}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav class="navbar">
+    <a href="{{ url_for('main.index') }}" class="nav-brand">YM<span>M</span>O</a>
+    <ul class="nav-links" id="navLinks">
+        <li><a href="{{ url_for('main.index') }}">Accueil</a></li>
+        <li><a href="{{ url_for('main.search') }}?transaction=Vente">Acheter</a></li>
+        <li><a href="{{ url_for('main.search') }}?transaction=Location">Louer</a></li>
+        <li><a href="{{ url_for('main.estimation') }}">Estimation</a></li>
+        <li><a href="{{ url_for('main.agencies') }}">Agences</a></li>
+        {% if current_user.is_authenticated %}
+        <li class="nav-dropdown">
+            <a href="#">{{ current_user.first_name }} ▾</a>
+            <div class="nav-dropdown-menu">
+                <a href="{{ url_for('dashboard.index') }}"><i class="fas fa-th-large"></i> Tableau de bord</a>
+                {% if current_user.is_admin %}<a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-shield-alt"></i> Administration</a>{% endif %}
+                {% if current_user.is_agent or current_user.is_admin %}<a href="{{ url_for('properties.add') }}"><i class="fas fa-plus"></i> Ajouter un bien</a>{% endif %}
+                <a href="{{ url_for('auth.profile') }}"><i class="fas fa-cog"></i> Mon profil</a>
+                <a href="{{ url_for('auth.logout') }}" style="color:var(--danger)!important"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+            </div>
+        </li>
+        {% else %}
+        <li><a href="{{ url_for('auth.login') }}">Connexion</a></li>
+        <li><a href="{{ url_for('auth.register') }}" class="nav-cta">Inscription</a></li>
+        {% endif %}
+    </ul>
+    <div class="hamburger" id="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">
+        <span></span><span></span><span></span>
+    </div>
+</nav>
+<div class="alerts-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}" onclick="this.remove()">
+        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endwith %}
+</div>
+<main style="flex:1">{% block content %}{% endblock %}</main>
+<footer>
+    <div class="footer-top">
+        <div>
+            <div class="footer-brand">YM<span>M</span>O</div>
+            <p style="font-size:0.875rem;line-height:1.7">Groupe immobilier de référence. Siège à Aix-en-Provence, 12 agences en France.</p>
+        </div>
+        <div>
+            <div class="footer-title">Acheter</div>
+            <ul class="footer-links">
+                <li><a href="{{ url_for('main.search') }}?transaction=Vente&type=Appartement">Appartements</a></li>
+                <li><a href="{{ url_for('main.search') }}?transaction=Vente&type=Maison">Maisons</a></li>
+                <li><a href="{{ url_for('main.search') }}?transaction=Vente&type=Villa">Villas</a></li>
+            </ul>
+        </div>
+        <div>
+            <div class="footer-title">Services</div>
+            <ul class="footer-links">
+                <li><a href="{{ url_for('main.estimation') }}">Estimation</a></li>
+                <li><a href="{{ url_for('main.agencies') }}">Agences</a></li>
+                <li><a href="{{ url_for('main.contact') }}">Contact</a></li>
+            </ul>
+        </div>
+        <div>
+            <div class="footer-title">Contact</div>
+            <ul class="footer-links">
+                <li><a href="#">📍 Aix-en-Provence</a></li>
+                <li><a href="#">📞 04 XX XX XX XX</a></li>
+                <li><a href="#">✉️ contact@ymmo.fr</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2024 Ymmo. Tous droits réservés.</span>
+        <span>Projet Ynov Campus B2 — INFRA &amp; DEV</span>
+    </div>
+</footer>
+<script>document.querySelectorAll('.alert').forEach(a=>setTimeout(()=>a.style.opacity='0',4000));</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

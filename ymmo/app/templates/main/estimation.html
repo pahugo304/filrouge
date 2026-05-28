@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block title %}Estimation de votre bien — Ymmo{% endblock %}
+
+{% block extra_css %}
+<style>
+.estimation-hero { background: linear-gradient(135deg, var(--noir) 0%, #1A1208 100%); padding: 80px 5%; color: var(--white); }
+.estimation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; max-width: 1100px; margin: 0 auto; }
+.result-panel { background: var(--white); border-radius: var(--radius-lg); padding: 36px; box-shadow: var(--shadow-lg); display: none; }
+.result-panel.visible { display: block; animation: fadeIn 0.5s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.price-range { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 24px 0; }
+.price-val { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--mid-gray); }
+.price-main { font-family: 'Cormorant Garamond', serif; font-size: 3rem; font-weight: 600; color: var(--gold-dark); }
+.confidence-bar { height: 6px; border-radius: 3px; background: var(--light-gray); margin: 8px 0; overflow: hidden; }
+.confidence-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+.method-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(201,168,76,0.1); border-radius: 50px; font-size: 0.78rem; color: var(--gold-dark); }
+.step-indicator { display: flex; gap: 8px; margin-bottom: 32px; }
+.step { flex: 1; height: 3px; border-radius: 2px; background: var(--light-gray); transition: background 0.3s; }
+.step.active { background: var(--gold); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="estimation-hero">
+    <div style="max-width:600px;margin:0 auto;text-align:center">
+        <div class="section-label">Estimation IA</div>
+        <h1 style="color:var(--white);margin-bottom:16px">Quelle est la valeur<br>de votre bien ?</h1>
+        <p style="color:rgba(255,255,255,0.65);font-size:1.05rem">Notre algorithme analyse les données de milliers de transactions pour vous fournir une estimation fiable en quelques secondes.</p>
+    </div>
+</div>
+
+<div style="background:var(--light-gray);padding:64px 5%">
+    <div class="estimation-grid">
+        <!-- Form -->
+        <div>
+            <div class="card" style="padding:36px">
+                <h2 style="font-size:1.3rem;margin-bottom:8px">Décrivez votre bien</h2>
+                <p class="text-muted" style="font-size:0.875rem;margin-bottom:28px">Tous les champs marqués * sont requis pour une estimation précise.</p>
+
+                <div class="step-indicator">
+                    <div class="step active" id="s1"></div>
+                    <div class="step" id="s2"></div>
+                    <div class="step" id="s3"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ville / Commune *</label>
+                    <input type="text" id="city" class="form-control" placeholder="Ex: Aix-en-Provence, Lyon, Paris..." oninput="updateStep()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type de bien *</label>
+                    <select id="property_type" class="form-control form-select" onchange="updateStep()">
+                        {% for pt in property_types %}
+                        <option value="{{ pt.value }}">{{ pt.value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Surface (m²) *</label>
+                        <input type="number" id="surface" class="form-control" placeholder="75" min="5" max="10000" oninput="updateStep()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nb. de pièces</label>
+                        <input type="number" id="rooms" class="form-control" placeholder="3" min="1" max="20">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nb. de chambres</label>
+                    <input type="number" id="bedrooms" class="form-control" placeholder="2" min="0" max="15">
+                </div>
+
+                <button onclick="estimate()" class="btn btn-gold btn-lg" style="width:100%;justify-content:center" id="estimBtn">
+                    <i class="fas fa-magic"></i> Estimer maintenant
+                </button>
+            </div>
+        </div>
+
+        <!-- Result -->
+        <div>
+            <!-- Placeholder -->
+            <div id="resultPlaceholder" style="background:var(--white);border-radius:var(--radius-lg);padding:48px;text-align:center;box-shadow:var(--shadow)">
+                <div style="font-size:4rem;margin-bottom:16px">🏡</div>
+                <h3 style="color:var(--mid-gray);font-size:1.1rem;margin-bottom:8px">Votre estimation apparaîtra ici</h3>
+                <p class="text-muted" style="font-size:0.875rem">Remplissez le formulaire et cliquez sur "Estimer" pour obtenir une estimation basée sur notre algorithme IA.</p>
+                <div style="margin-top:32px;padding:20px;background:var(--light-gray);border-radius:var(--radius-lg)">
+                    <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);margin-bottom:12px">Comment ça fonctionne</div>
+                    <div style="display:flex;flex-direction:column;gap:10px;text-align:left;font-size:0.85rem;color:var(--mid-gray)">
+                        <div>🔍 Analyse des transactions récentes dans votre secteur</div>
+                        <div>📊 Comparaison avec des biens similaires</div>
+                        <div>🤖 Modèle Random Forest entraîné sur nos données</div>
+                        <div>📈 Fourchette de prix avec indice de confiance</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultPanel" class="result-panel">
+                <div style="text-align:center;margin-bottom:24px">
+                    <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--gold);margin-bottom:8px">Estimation Ymmo</div>
+                    <div id="resultCity" class="text-muted" style="font-size:0.9rem"></div>
+                </div>
+
+                <div style="text-align:center">
+                    <div class="price-range">
+                        <div class="price-val" id="priceLow"></div>
+                        <div style="color:var(--mid-gray)">—</div>
+                        <div class="price-main" id="priceMain"></div>
+                        <div style="color:var(--mid-gray)">—</div>
+                        <div class="price-val" id="priceHigh"></div>
+                    </div>
+                    <div class="text-muted" style="font-size:0.82rem;margin-bottom:16px">Fourchette estimée</div>
+                </div>
+
+                <div style="margin:20px 0;padding:16px;background:var(--light-gray);border-radius:var(--radius)">
+                    <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:6px">
+                        <span>Indice de confiance</span>
+                        <span id="confidenceLabel" style="font-weight:600"></span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px">
+                    <span class="method-badge"><i class="fas fa-robot"></i> <span id="methodLabel"></span></span>
+                    <span id="scoreLabel" class="method-badge" style="display:none"><i class="fas fa-chart-bar"></i> Score R² : <span id="scoreVal"></span></span>
+                </div>
+
+                <hr class="divider">
+                <div style="font-size:0.82rem;color:var(--mid-gray);text-align:center;line-height:1.6">
+                    ⚠️ Cette estimation est indicative et basée sur les données de marché. Pour une évaluation précise et juridiquement valable, contactez un de nos agents.
+                </div>
+                <div style="margin-top:20px;display:flex;gap:8px">
+                    <a href="{{ url_for('main.agencies') }}" class="btn btn-gold" style="flex:1;justify-content:center">
+                        <i class="fas fa-phone"></i> Contacter un agent
+                    </a>
+                    <button onclick="estimate()" class="btn btn-outline">Recalculer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateStep() {
+    const city = document.getElementById('city').value;
+    const surface = document.getElementById('surface').value;
+    document.getElementById('s1').classList.toggle('active', true);
+    document.getElementById('s2').classList.toggle('active', !!city);
+    document.getElementById('s3').classList.toggle('active', !!city && !!surface);
+}
+
+async function estimate() {
+    const city = document.getElementById('city').value.trim();
+    const surface = parseFloat(document.getElementById('surface').value);
+    const property_type = document.getElementById('property_type').value;
+    const rooms = parseInt(document.getElementById('rooms').value) || 3;
+    const bedrooms = parseInt(document.getElementById('bedrooms').value) || 2;
+
+    if (!city) { alert('Veuillez indiquer une ville.'); return; }
+    if (!surface || surface <= 0) { alert('Veuillez indiquer une surface valide.'); return; }
+
+    const btn = document.getElementById('estimBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calcul en cours...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/estimation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ city, property_type, surface, rooms, bedrooms })
+        });
+        const data = await res.json();
+
+        document.getElementById('resultPlaceholder').style.display = 'none';
+        const panel = document.getElementById('resultPanel');
+        panel.classList.add('visible');
+
+        document.getElementById('resultCity').textContent = `${property_type} · ${surface}m² · ${city}`;
+        document.getElementById('priceMain').textContent = formatPrice(data.estimated_price) + ' €';
+        document.getElementById('priceLow').textContent = formatPrice(data.price_range_low) + ' €';
+        document.getElementById('priceHigh').textContent = formatPrice(data.price_range_high) + ' €';
+
+        const conf = { 'haute': { pct: 90, color: '#2D7D46', label: 'Haute' }, 'moyenne': { pct: 60, color: '#D4AC0D', label: 'Moyenne' }, 'faible': { pct: 30, color: '#C0392B', label: 'Faible' } };
+        const c = conf[data.confidence] || conf['faible'];
+        document.getElementById('confidenceLabel').textContent = c.label;
+        document.getElementById('confidenceLabel').style.color = c.color;
+        const fill = document.getElementById('confidenceFill');
+        fill.style.background = c.color;
+        setTimeout(() => fill.style.width = c.pct + '%', 100);
+
+        const methodLabels = { 'random_forest': 'Algorithme Random Forest', 'heuristique': 'Estimation heuristique' };
+        document.getElementById('methodLabel').textContent = methodLabels[data.method] || data.method;
+
+        if (data.model_score !== undefined) {
+            document.getElementById('scoreLabel').style.display = 'inline-flex';
+            document.getElementById('scoreVal').textContent = data.model_score;
+        }
+    } catch(e) {
+        alert('Erreur lors de l\'estimation. Veuillez réessayer.');
+    } finally {
+        btn.innerHTML = '<i class="fas fa-magic"></i> Estimer maintenant';
+        btn.disabled = false;
+    }
+}
+
+function formatPrice(n) {
+    return new Intl.NumberFormat('fr-FR').format(Math.round(n));
+}
+</script>
+{% endblock %}

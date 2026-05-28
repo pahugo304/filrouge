@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Nos agences — Ymmo{% endblock %}
+{% block content %}
+<div style="background:var(--noir);padding:64px 5%;text-align:center">
+    <div class="section-label">Réseau national</div>
+    <h1 style="color:var(--white)">Nos 12 agences en France</h1>
+    <p style="color:rgba(255,255,255,0.6);margin-top:12px">Un réseau de proximité au service de vos projets immobiliers</p>
+</div>
+
+<div class="section">
+    {% if agencies %}
+    <div class="grid grid-3">
+        {% for ag in agencies %}
+        <div class="card" style="padding:28px">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+                <div style="width:52px;height:52px;border-radius:var(--radius-lg);background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--noir);font-weight:600">{{ ag.city[0] }}</div>
+                <div>
+                    <div style="font-weight:600;font-size:1rem">{{ ag.name }}</div>
+                    <div class="text-gold" style="font-size:0.82rem">{{ ag.city }}{% if ag.zip_code %} {{ ag.zip_code }}{% endif %}</div>
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:0.85rem;color:var(--mid-gray)">
+                {% if ag.address %}<span>📍 {{ ag.address }}</span>{% endif %}
+                {% if ag.phone %}<span>📞 <a href="tel:{{ ag.phone }}" style="color:var(--mid-gray);text-decoration:none">{{ ag.phone }}</a></span>{% endif %}
+                {% if ag.email %}<span>✉️ <a href="mailto:{{ ag.email }}" style="color:var(--mid-gray);text-decoration:none">{{ ag.email }}</a></span>{% endif %}
+                {% if ag.region %}<span>🗺️ {{ ag.region }}</span>{% endif %}
+            </div>
+            <hr class="divider">
+            <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:var(--mid-gray)">
+                <span>{{ ag.agents|length }} agent(s)</span>
+                <span>{{ ag.properties|length }} bien(s)</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:48px">
+        <p class="text-muted">Aucune agence référencée pour le moment.</p>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <a href="{{ url_for('admin.add_agency') }}" class="btn btn-gold mt-3">Ajouter une agence</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

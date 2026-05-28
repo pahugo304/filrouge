@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Ajouter une agence — Admin Ymmo{% endblock %}
+{% block content %}
+<div style="max-width:600px;margin:48px auto;padding:0 5%">
+    <a href="{{ url_for('admin.agencies') }}" style="color:var(--mid-gray);text-decoration:none;font-size:0.875rem">← Retour aux agences</a>
+    <h1 style="font-size:1.6rem;margin:16px 0 32px">Nouvelle agence</h1>
+    <div class="card" style="padding:36px">
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label">Nom de l'agence *</label>
+                <input type="text" name="name" class="form-control" required placeholder="Ymmo Marseille">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="form-group">
+                    <label class="form-label">Ville *</label>
+                    <input type="text" name="city" class="form-control" required placeholder="Marseille">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Code postal</label>
+                    <input type="text" name="zip_code" class="form-control" placeholder="13000">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adresse</label>
+                <input type="text" name="address" class="form-control" placeholder="12 rue de la République">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Région</label>
+                <input type="text" name="region" class="form-control" placeholder="Provence-Alpes-Côte d'Azur">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="form-group">
+                    <label class="form-label">Téléphone</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="04 XX XX XX XX">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="marseille@ymmo.fr">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center">
+                <i class="fas fa-plus"></i> Créer l'agence
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

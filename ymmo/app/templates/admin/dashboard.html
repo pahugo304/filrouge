@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block title %}Administration — Ymmo{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 68px); }
+.admin-sidebar { background: var(--noir); padding: 0; }
+.admin-sidebar-header { padding: 24px 28px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.sidebar-menu { list-style: none; padding: 12px 0; }
+.sidebar-menu li a { display: flex; align-items: center; gap: 12px; padding: 12px 28px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.875rem; transition: var(--transition); border-left: 3px solid transparent; }
+.sidebar-menu li a:hover, .sidebar-menu li a.active { color: var(--white); background: rgba(255,255,255,0.06); border-left-color: var(--gold); }
+.sidebar-menu li a i { width: 18px; text-align: center; color: var(--gold); }
+.sidebar-section { padding: 12px 28px 6px; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-top: 8px; }
+.admin-content { background: #F0EEE9; padding: 36px; overflow-y: auto; }
+.kpi-card { background: var(--white); border-radius: var(--radius-lg); padding: 22px 26px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 16px; }
+.kpi-icon { width: 52px; height: 52px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+.kpi-value { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 600; line-height: 1; color: var(--charcoal); }
+.kpi-label { font-size: 0.78rem; color: var(--mid-gray); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+.chart-card { background: var(--white); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow); }
+.chart-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; margin-bottom: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--white)">YM<span style="color:var(--gold)">M</span>O</div>
+            <div style="color:rgba(255,255,255,0.4);font-size:0.75rem;margin-top:2px">Administration</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{{ url_for('admin.dashboard') }}" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <div class="sidebar-section">Gestion</div>
+            <li><a href="{{ url_for('admin.properties') }}"><i class="fas fa-building"></i> Biens immobiliers</a></li>
+            <li><a href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i> Utilisateurs</a></li>
+            <li><a href="{{ url_for('admin.agencies') }}"><i class="fas fa-map-marker-alt"></i> Agences</a></li>
+            <div class="sidebar-section">Analyse</div>
+            <li><a href="{{ url_for('admin.analytics') }}"><i class="fas fa-chart-line"></i> Analytique</a></li>
+            <div class="sidebar-section">Site</div>
+            <li><a href="{{ url_for('main.index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> Voir le site</a></li>
+            <li><a href="{{ url_for('auth.logout') }}" style="color:rgba(192,57,43,0.7) !important"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+        </ul>
+    </aside>
+
+    <!-- Content -->
+    <div class="admin-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+            <div>
+                <h1 style="font-size:1.6rem">Tableau de bord</h1>
+                <p class="text-muted" style="font-size:0.875rem">Vue globale de la plateforme Ymmo</p>
+            </div>
+            <a href="{{ url_for('properties.add') }}" class="btn btn-gold btn-sm">
+                <i class="fas fa-plus"></i> Nouveau bien
+            </a>
+        </div>
+
+        <!-- KPI Cards -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px">
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:rgba(201,168,76,0.12)"><i class="fas fa-building" style="color:var(--gold)"></i></div>
+                <div><div class="kpi-value">{{ stats.properties }}</div><div class="kpi-label">Biens total</div></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:rgba(45,125,70,0.12)"><i class="fas fa-check-circle" style="color:var(--success)"></i></div>
+                <div><div class="kpi-value">{{ stats.available }}</div><div class="kpi-label">Disponibles</div></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:rgba(26,111,168,0.12)"><i class="fas fa-handshake" style="color:var(--info)"></i></div>
+                <div><div class="kpi-value">{{ stats.sold }}</div><div class="kpi-label">Vendus</div></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:rgba(201,168,76,0.12)"><i class="fas fa-users" style="color:var(--gold)"></i></div>
+                <div><div class="kpi-value">{{ stats.users }}</div><div class="kpi-label">Utilisateurs</div></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:rgba(45,125,70,0.12)"><i class="fas fa-map-marker-alt" style="color:var(--success)"></i></div>
+                <div><div class="kpi-value">{{ stats.agencies }}</div><div class="kpi-label">Agences</div></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon" style="background:rgba(192,57,43,0.12)"><i class="fas fa-calendar" style="color:var(--danger)"></i></div>
+                <div><div class="kpi-value">{{ stats.appointments }}</div><div class="kpi-label">Rendez-vous</div></div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:24px">
+            <!-- Revenue trend -->
+            <div class="chart-card">
+                <div class="chart-title">Évolution du chiffre d'affaires mensuel</div>
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+            <!-- Distribution pie -->
+            <div class="chart-card">
+                <div class="chart-title">Types de biens</div>
+                <canvas id="distChart" height="160"></canvas>
+            </div>
+        </div>
+
+        <!-- Price trends + agencies -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+            <div class="chart-card">
+                <div class="chart-title">Tendance des prix au m²</div>
+                <canvas id="trendsChart" height="120"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Performance des agences</div>
+                <canvas id="agencyChart" height="120"></canvas>
+            </div>
+        </div>
+
+        <!-- Market overview highlight -->
+        <div class="chart-card" style="margin-bottom:24px">
+            <div class="chart-title">Indicateurs de marché (12 derniers mois)</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center">
+                <div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--gold)">{{ "{:,.0f}".format(overview.avg_price_per_m2) }} €</div>
+                    <div class="text-muted" style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em">Prix moyen /m²</div>
+                </div>
+                <div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--gold)">{{ "{:,.0f}".format(overview.avg_price) }} €</div>
+                    <div class="text-muted" style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em">Prix moyen</div>
+                </div>
+                <div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--gold)">{{ "{:,.0f}".format(overview.median_price) }} €</div>
+                    <div class="text-muted" style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em">Prix médian</div>
+                </div>
+                <div>
+                    <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--gold)">{{ overview.total_transactions }}</div>
+                    <div class="text-muted" style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em">Transactions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent tables -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+            <div class="chart-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                    <div class="chart-title" style="margin:0">Derniers utilisateurs</div>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-outline btn-sm">Voir tout</a>
+                </div>
+                <table>
+                    <tbody>
+                        {% for u in recent_users %}
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:10px">
+                                    <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--noir);flex-shrink:0">{{ u.first_name[0] }}{{ u.last_name[0] }}</div>
+                                    <div>
+                                        <div style="font-weight:500;font-size:0.875rem">{{ u.full_name }}</div>
+                                        <div class="text-muted" style="font-size:0.75rem">{{ u.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge badge-gold" style="font-size:0.7rem">{{ u.role.value }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="chart-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                    <div class="chart-title" style="margin:0">Derniers biens ajoutés</div>
+                    <a href="{{ url_for('admin.properties') }}" class="btn btn-outline btn-sm">Voir tout</a>
+                </div>
+                <table>
+                    <tbody>
+                        {% for p in recent_props %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('properties.detail', id=p.id) }}" style="font-weight:500;font-size:0.875rem;color:var(--charcoal);text-decoration:none">{{ p.title|truncate(32) }}</a>
+                                <div class="text-muted" style="font-size:0.75rem">{{ p.city }} — {{ p.property_type.value }}</div>
+                            </td>
+                            <td style="font-weight:600;font-size:0.875rem;color:var(--gold-dark);white-space:nowrap">{{ "{:,.0f}".format(p.price) }} €</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const gold = '#C9A84C';
+const goldLight = 'rgba(201,168,76,0.15)';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.color = '#6B6B6B';
+
+// Revenue chart
+new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ monthly.labels | tojson }},
+        datasets: [{
+            label: 'CA (€)',
+            data: {{ monthly.values | tojson }},
+            backgroundColor: goldLight,
+            borderColor: gold,
+            borderWidth: 2,
+            borderRadius: 4,
+        }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#F0EEE9' }, ticks: { callback: v => (v/1000000).toFixed(1)+'M €' } } } }
+});
+
+// Distribution chart
+new Chart(document.getElementById('distChart'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ dist.labels | tojson }},
+        datasets: [{ data: {{ dist.counts | tojson }}, backgroundColor: ['#C9A84C','#1A1A1A','#6B6B6B','#E8CFA0','#8B6914','#2C2C2C'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } }, cutout: '65%' }
+});
+
+// Price trends
+new Chart(document.getElementById('trendsChart'), {
+    type: 'line',
+    data: {
+        labels: {{ trends.labels | tojson }},
+        datasets: [{ label: '€/m²', data: {{ trends.values | tojson }}, borderColor: gold, backgroundColor: goldLight, tension: 0.4, fill: true, pointRadius: 3 }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#F0EEE9' }, ticks: { callback: v => v+'€' } } } }
+});
+
+// Agency performance
+const agData = {{ agencies_perf[:6] | tojson }};
+new Chart(document.getElementById('agencyChart'), {
+    type: 'bar',
+    data: {
+        labels: agData.map(a => a.agency),
+        datasets: [{ label: 'Transactions', data: agData.map(a => a.transactions), backgroundColor: gold, borderRadius: 4 }]
+    },
+    options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#F0EEE9' } } } }
+});
+</script>
+{% endblock %}

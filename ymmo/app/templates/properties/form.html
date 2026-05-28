@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block title %}{% if prop %}Modifier{% else %}Ajouter{% endif %} un bien — Ymmo{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-page { max-width: 900px; margin: 0 auto; padding: 40px 5%; }
+.form-section { background: var(--white); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px; box-shadow: var(--shadow); }
+.form-section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--light-gray); display: flex; align-items: center; gap: 10px; }
+.form-section-title i { color: var(--gold); }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.checkbox-item { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid #E0DDD8; border-radius: var(--radius); cursor: pointer; transition: var(--transition); font-size: 0.875rem; }
+.checkbox-item:hover { border-color: var(--gold); background: rgba(201,168,76,0.04); }
+.checkbox-item input[type=checkbox]:checked + span { color: var(--gold-dark); font-weight: 500; }
+.img-preview-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.img-preview { width: 100px; height: 80px; object-fit: cover; border-radius: var(--radius); border: 2px solid var(--border); }
+.dpe-select { display: flex; gap: 6px; flex-wrap: wrap; }
+.dpe-btn { width: 44px; height: 44px; border-radius: var(--radius); border: 2px solid transparent; cursor: pointer; font-weight: 700; font-size: 1rem; }
+.dpe-btn.selected { border-color: var(--noir); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px">
+        <a href="{{ url_for('dashboard.index') }}" style="color:var(--mid-gray)"><i class="fas fa-arrow-left"></i></a>
+        <h1 style="font-size:1.8rem">{% if prop %}Modifier le bien{% else %}Ajouter un bien{% endif %}</h1>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <!-- Informations générales -->
+        <div class="form-section">
+            <div class="form-section-title"><i class="fas fa-info-circle"></i> Informations générales</div>
+            <div class="form-group">
+                <label class="form-label">Titre de l'annonce *</label>
+                <input type="text" name="title" class="form-control" required placeholder="Ex: Appartement lumineux 3 pièces avec terrasse" value="{{ prop.title if prop else '' }}">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Type de transaction *</label>
+                    <select name="transaction_type" class="form-control form-select" required {% if prop %}disabled{% endif %}>
+                        {% for t in transaction_types %}
+                        <option value="{{ t.value }}" {% if prop and prop.transaction_type == t %}selected{% endif %}>{{ t.value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type de bien *</label>
+                    <select name="property_type" class="form-control form-select" required {% if prop %}disabled{% endif %}>
+                        {% for pt in property_types %}
+                        <option value="{{ pt.value }}" {% if prop and prop.property_type == pt %}selected{% endif %}>{{ pt.value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if prop %}
+                <div class="form-group">
+                    <label class="form-label">Statut</label>
+                    <select name="status" class="form-control form-select">
+                        {% for s in statuses %}
+                        <option value="{{ s.value }}" {% if prop.status == s %}selected{% endif %}>{{ s.value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="5" placeholder="Décrivez le bien en détail : environnement, atouts, état général...">{{ prop.description if prop else '' }}</textarea>
+            </div>
+        </div>
+
+        <!-- Prix et surfaces -->
+        <div class="form-section">
+            <div class="form-section-title"><i class="fas fa-euro-sign"></i> Prix et surfaces</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Prix (€) *</label>
+                    <input type="number" name="price" class="form-control" required min="0" step="1000" placeholder="350000" value="{{ prop.price if prop else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Surface (m²)</label>
+                    <input type="number" name="surface" class="form-control" min="0" step="0.5" placeholder="75" value="{{ prop.surface if prop else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre de pièces</label>
+                    <input type="number" name="rooms" class="form-control" min="1" max="20" placeholder="3" value="{{ prop.rooms if prop else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Chambres</label>
+                    <input type="number" name="bedrooms" class="form-control" min="0" max="15" placeholder="2" value="{{ prop.bedrooms if prop else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Salles de bain</label>
+                    <input type="number" name="bathrooms" class="form-control" min="0" max="10" placeholder="1" value="{{ prop.bathrooms if prop else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Étage</label>
+                    <input type="number" name="floor" class="form-control" min="0" placeholder="2" value="{{ prop.floor if prop else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nb. étages total</label>
+                    <input type="number" name="total_floors" class="form-control" min="0" placeholder="5" value="{{ prop.total_floors if prop else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Année de construction</label>
+                    <input type="number" name="year_built" class="form-control" min="1800" max="2024" placeholder="1985" value="{{ prop.year_built if prop else '' }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Localisation -->
+        <div class="form-section">
+            <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Localisation</div>
+            <div class="form-group">
+                <label class="form-label">Adresse</label>
+                <input type="text" name="address" class="form-control" placeholder="12 rue des Fleurs" value="{{ prop.address if prop else '' }}">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Ville *</label>
+                    <input type="text" name="city" class="form-control" required placeholder="Aix-en-Provence" value="{{ prop.city if prop else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Code postal</label>
+                    <input type="text" name="zip_code" class="form-control" placeholder="13100" value="{{ prop.zip_code if prop else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Région</label>
+                    <input type="text" name="region" class="form-control" placeholder="Provence-Alpes-Côte d'Azur" value="{{ prop.region if prop else '' }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Équipements -->
+        <div class="form-section">
+            <div class="form-section-title"><i class="fas fa-star"></i> Équipements et options</div>
+            <div class="checkbox-grid">
+                {% set amenities = [
+                    ('has_parking', 'fa-car', 'Parking'),
+                    ('has_garden', 'fa-leaf', 'Jardin'),
+                    ('has_pool', 'fa-swimming-pool', 'Piscine'),
+                    ('has_balcony', 'fa-door-open', 'Balcon/Terrasse'),
+                    ('has_elevator', 'fa-chevron-up', 'Ascenseur'),
+                    ('has_cellar', 'fa-box', 'Cave'),
+                    ('is_furnished', 'fa-couch', 'Meublé'),
+                ] %}
+                {% for name, icon, label in amenities %}
+                <label class="checkbox-item">
+                    <input type="checkbox" name="{{ name }}" {% if prop and prop[name] %}checked{% endif %}>
+                    <i class="fas {{ icon }}" style="color:var(--gold);width:16px"></i>
+                    <span>{{ label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <div style="margin-top:24px">
+                <label class="form-label">Classe énergie (DPE)</label>
+                <div class="dpe-select">
+                    {% for cls, color in [('A','#00A850'),('B','#57B33B'),('C','#97C836'),('D','#F9C52E'),('E','#F27521'),('F','#E6232A'),('G','#7F1B21')] %}
+                    <label>
+                        <input type="radio" name="energy_class" value="{{ cls }}" {% if prop and prop.energy_class == cls %}checked{% endif %} style="display:none">
+                        <div class="dpe-btn {% if prop and prop.energy_class == cls %}selected{% endif %}" style="background:{{ color }};color:{% if cls in ['A','E','F','G'] %}white{% else %}#333{% endif %}">{{ cls }}</div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-check" style="margin-top:20px">
+                <input type="checkbox" name="is_featured" id="is_featured" {% if prop and prop.is_featured %}checked{% endif %}>
+                <label for="is_featured" style="cursor:pointer;font-size:0.875rem">⭐ Mettre en avant sur la page d'accueil</label>
+            </div>
+        </div>
+
+        <!-- Photos -->
+        <div class="form-section">
+            <div class="form-section-title"><i class="fas fa-camera"></i> Photos</div>
+            {% if prop and prop.images %}
+            <div style="margin-bottom:16px">
+                <div class="form-label">Photos actuelles</div>
+                <div class="img-preview-grid">
+                    {% for img in prop.images %}
+                    <img src="{{ url_for('static', filename='img/properties/' + img.filename) }}" class="img-preview" alt="">
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <label class="form-label">{% if prop %}Ajouter de nouvelles photos{% else %}Photos du bien{% endif %}</label>
+                <input type="file" name="images" multiple accept="image/*" class="form-control" id="imageInput" onchange="previewImages(this)">
+                <div style="font-size:0.75rem;color:var(--mid-gray);margin-top:4px">JPG, PNG, WebP — max 16Mo — La première image sera l'image principale</div>
+            </div>
+            <div class="img-preview-grid" id="previewContainer"></div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:12px;justify-content:flex-end">
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline">Annuler</a>
+            <button type="submit" class="btn btn-gold btn-lg">
+                <i class="fas fa-{% if prop %}save{% else %}plus{% endif %}"></i>
+                {% if prop %}Enregistrer les modifications{% else %}Publier le bien{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImages(input) {
+    const container = document.getElementById('previewContainer');
+    container.innerHTML = '';
+    Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'img-preview';
+            container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+// DPE visual selection
+document.querySelectorAll('.dpe-btn').forEach(btn => {
+    btn.parentElement.querySelector('input[type=radio]').addEventListener('change', function() {
+        document.querySelectorAll('.dpe-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+    });
+});
+</script>
+{% endblock %}

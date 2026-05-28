@@ -1,0 +1,128 @@
+{% extends 'app/templates/admin/dashboard.html' %}
+{% block title %}Analytique — Admin Ymmo{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--white)">YM<span style="color:var(--gold)">M</span>O</div>
+            <div style="color:rgba(255,255,255,0.4);font-size:0.75rem;margin-top:2px">Administration</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <div class="sidebar-section">Gestion</div>
+            <li><a href="{{ url_for('admin.properties') }}"><i class="fas fa-building"></i> Biens immobiliers</a></li>
+            <li><a href="{{ url_for('admin.users') }}"><i class="fas fa-users"></i> Utilisateurs</a></li>
+            <li><a href="{{ url_for('admin.agencies') }}"><i class="fas fa-map-marker-alt"></i> Agences</a></li>
+            <div class="sidebar-section">Analyse</div>
+            <li><a href="{{ url_for('admin.analytics') }}" class="active"><i class="fas fa-chart-line"></i> Analytique</a></li>
+            <div class="sidebar-section">Site</div>
+            <li><a href="{{ url_for('main.index') }}" target="_blank"><i class="fas fa-external-link-alt"></i> Voir le site</a></li>
+            <li><a href="{{ url_for('auth.logout') }}" style="color:rgba(192,57,43,0.7) !important"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+        </ul>
+    </aside>
+
+    <div class="admin-content">
+        <h1 style="font-size:1.6rem;margin-bottom:8px">Analyse de marché</h1>
+        <p class="text-muted" style="margin-bottom:32px;font-size:0.875rem">Données de performance et tendances immobilières</p>
+
+        <!-- Revenue + Trends -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+            <div class="chart-card">
+                <div class="chart-title">CA mensuel (année en cours)</div>
+                <canvas id="monthlyChart" height="130"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Évolution du prix au m²</div>
+                <canvas id="trendsChart" height="130"></canvas>
+            </div>
+        </div>
+
+        <!-- Top cities -->
+        <div class="chart-card" style="margin-bottom:24px">
+            <div class="chart-title">Top villes — Volume de transactions</div>
+            <canvas id="citiesChart" height="70"></canvas>
+        </div>
+
+        <!-- Distribution + Hot zones -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+            <div class="chart-card">
+                <div class="chart-title">Répartition par type de bien</div>
+                <canvas id="distChart" height="180"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">🔥 Zones les plus dynamiques (6 mois)</div>
+                <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+                    {% for zone in hot_zones %}
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--light-gray);border-radius:var(--radius)">
+                        <div>
+                            <span style="font-weight:500;font-size:0.9rem">{{ zone.city }}</span>
+                            <span class="text-muted" style="font-size:0.78rem;margin-left:8px">{{ zone.volume }} ventes</span>
+                        </div>
+                        <div style="text-align:right">
+                            <div style="color:var(--gold-dark);font-weight:600;font-size:0.9rem">{{ "{:,.0f}".format(zone.avg_pm2) }} €/m²</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Agencies table -->
+        <div class="chart-card">
+            <div class="chart-title">Performance des agences</div>
+            <table>
+                <thead>
+                    <tr><th>Agence</th><th>Ville</th><th>Transactions</th><th>Volume total</th><th>Prix moyen</th></tr>
+                </thead>
+                <tbody>
+                    {% for ag in agencies_perf %}
+                    <tr>
+                        <td style="font-weight:500">{{ ag.agency }}</td>
+                        <td class="text-muted">{{ ag.city }}</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <div style="width:80px;height:6px;background:var(--light-gray);border-radius:3px;overflow:hidden">
+                                    <div style="height:100%;background:var(--gold);width:{{ [ag.transactions * 100 // (agencies_perf[0].transactions or 1), 100]|min }}%"></div>
+                                </div>
+                                <span>{{ ag.transactions }}</span>
+                            </div>
+                        </td>
+                        <td style="font-weight:600;color:var(--gold-dark)">{{ "{:,.0f}".format(ag.total_volume) }} €</td>
+                        <td>{{ "{:,.0f}".format(ag.avg_price) }} €</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const gold='#C9A84C', goldLight='rgba(201,168,76,0.15)';
+Chart.defaults.font.family="'DM Sans',sans-serif"; Chart.defaults.color='#6B6B6B';
+
+new Chart(document.getElementById('monthlyChart'), {
+    type:'bar',
+    data:{labels:{{ monthly.labels|tojson }},datasets:[{label:'CA',data:{{ monthly.values|tojson }},backgroundColor:goldLight,borderColor:gold,borderWidth:2,borderRadius:4}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'#F0EEE9'},ticks:{callback:v=>(v/1000000).toFixed(1)+'M €'}}}}
+});
+new Chart(document.getElementById('trendsChart'), {
+    type:'line',
+    data:{labels:{{ trends.labels|tojson }},datasets:[{label:'€/m²',data:{{ trends.values|tojson }},borderColor:gold,backgroundColor:goldLight,tension:0.4,fill:true,pointRadius:3}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'#F0EEE9'},ticks:{callback:v=>v+'€'}}}}
+});
+new Chart(document.getElementById('citiesChart'), {
+    type:'bar',
+    data:{labels:{{ top_cities|map(attribute='city')|list|tojson }},datasets:[{label:'Transactions',data:{{ top_cities|map(attribute='count')|list|tojson }},backgroundColor:gold,borderRadius:4}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:'#F0EEE9'}}}}
+});
+new Chart(document.getElementById('distChart'), {
+    type:'doughnut',
+    data:{labels:{{ dist.labels|tojson }},datasets:[{data:{{ dist.counts|tojson }},backgroundColor:['#C9A84C','#1A1A1A','#6B6B6B','#E8CFA0','#8B6914','#2C2C2C'],borderWidth:0,hoverOffset:6}]},
+    options:{plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:14}}},cutout:'62%'}
+});
+</script>
+{% endblock %}
