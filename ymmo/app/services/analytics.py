@@ -93,7 +93,7 @@ class AnalyticsService:
             records = SaleRecord.query.filter_by(agency_id=ag.id).all()
             count = len(records)
             total = sum(r.price for r in records if r.price) if records else 0
-            result.append({"agency":ag.name,"city":ag.city,"transactions":count,"total_volume":round(total,0),"avg_price":round(total/count,0) if count else 0})
+            result.append({"agency":str(ag.name),"city":str(ag.city),"transactions":int(count),"total_volume":float(round(total,0)),"avg_price":float(round(total/count,0)) if count else 0.0})
         return sorted(result, key=lambda x: x["transactions"], reverse=True)
 
     @staticmethod
@@ -106,7 +106,7 @@ class AnalyticsService:
             return {"labels":months_fr,"values":[18500000,21200000,24800000,28100000,31500000,26700000,22300000,19800000,27600000,32100000,24900000,21400000]}
         df = pd.DataFrame([{"month":r.month,"price":r.price} for r in records])
         monthly = df.groupby("month")["price"].sum().reindex(range(1,13),fill_value=0)
-        return {"labels":months_fr,"values":[round(v,0) for v in monthly.values.tolist()]}
+        return {"labels":months_fr,"values":[int(v) for v in monthly.tolist()]}
 
     @staticmethod
     def get_hot_zones():

@@ -194,10 +194,10 @@ Chart.defaults.color = '#6B6B6B';
 new Chart(document.getElementById('revenueChart'), {
     type: 'bar',
     data: {
-        labels: {{ monthly.labels | tojson }},
+        labels: {{ monthly["labels"] | tojson }},
         datasets: [{
             label: 'CA (€)',
-            data: {{ monthly.values | tojson }},
+            data: {{ monthly["values"] | tojson }},
             backgroundColor: goldLight,
             borderColor: gold,
             borderWidth: 2,
@@ -211,8 +211,8 @@ new Chart(document.getElementById('revenueChart'), {
 new Chart(document.getElementById('distChart'), {
     type: 'doughnut',
     data: {
-        labels: {{ dist.labels | tojson }},
-        datasets: [{ data: {{ dist.counts | tojson }}, backgroundColor: ['#C9A84C','#1A1A1A','#6B6B6B','#E8CFA0','#8B6914','#2C2C2C'], borderWidth: 0, hoverOffset: 6 }]
+        labels: {{ dist["labels"] | tojson }},
+        datasets: [{ data: {{ dist["counts"] | tojson }}, backgroundColor: ['#C9A84C','#1A1A1A','#6B6B6B','#E8CFA0','#8B6914','#2C2C2C'], borderWidth: 0, hoverOffset: 6 }]
     },
     options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } }, cutout: '65%' }
 });
@@ -221,14 +221,14 @@ new Chart(document.getElementById('distChart'), {
 new Chart(document.getElementById('trendsChart'), {
     type: 'line',
     data: {
-        labels: {{ trends.labels | tojson }},
-        datasets: [{ label: '€/m²', data: {{ trends.values | tojson }}, borderColor: gold, backgroundColor: goldLight, tension: 0.4, fill: true, pointRadius: 3 }]
+        labels: {{ trends["labels"] | tojson }},
+        datasets: [{ label: '€/m²', data: {{ trends["values"] | tojson }}, borderColor: gold, backgroundColor: goldLight, tension: 0.4, fill: true, pointRadius: 3 }]
     },
     options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#F0EEE9' }, ticks: { callback: v => v+'€' } } } }
 });
 
 // Agency performance
-const agData = {{ agencies_perf[:6] | tojson }};
+const agData = {{ agencies_perf[:6] | tojson if agencies_perf else "[]" }};
 new Chart(document.getElementById('agencyChart'), {
     type: 'bar',
     data: {
