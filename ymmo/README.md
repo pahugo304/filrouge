@@ -128,23 +128,23 @@ ymmo/
 
 ## Fonctionnalités
 
-### 🏠 Côté public
+###  Côté public
 - Recherche avancée avec filtres (type, ville, prix, surface, pièces...)
 - Fiches de biens avec galerie photos
 - Outil d'estimation IA (RandomForest / heuristique)
 - Carte des agences
 
-### 👤 Espace client
+###  Espace client
 - Gestion des favoris
 - Prise de rendez-vous
 - Historique des RDV
 
-### 🏢 Espace agent
+###  Espace agent
 - CRUD complet des annonces
 - Upload de photos
 - Gestion des RDV entrants
 
-### 🔧 Administration
+###  Administration
 - Dashboard avec graphiques (Chart.js)
 - Gestion utilisateurs / rôles / agences
 - Analytique de marché complète :
@@ -153,7 +153,7 @@ ymmo/
   - Zones géographiques chaudes
   - Distribution par type de bien
 
-### 🤖 IA & Données (analytics.py)
+###  IA & Données (analytics.py)
 - `predict_price()` — Prédiction de prix via RandomForestRegressor
 - `get_price_trends()` — Évolution mensuelle des prix
 - `get_top_cities()` — Villes les plus actives
@@ -187,20 +187,6 @@ DB_NAME=ymmo_db
 | `/api/market-overview` | GET | Vue d'ensemble marché |
 | `/api/top-cities` | GET | Top villes |
 | `/api/properties/map` | GET | Biens géolocalisés |
-
----
-
-## Compétences couvertes (grille Ynov)
-
-✅ Architecture backend orientée services (Blueprints Flask)  
-✅ Interactions client-serveur (API REST JSON)  
-✅ Principes SOLID / DRY / KISS  
-✅ POO avancée (modèles, services, factories)  
-✅ SQL avancé (SQLAlchemy ORM + relations)  
-✅ Analyse de données Python (pandas, scikit-learn)  
-✅ Prédiction ML (RandomForest, R², MAE)  
-✅ Responsive design + accessibilité  
-✅ Versionning Git ready  
 
 ---
 
